@@ -1,0 +1,30 @@
+.venv
+
+ffmpeg_output
+ffmpeg_output2
+bak
+lambda
+bak/reference
+doc
+
+requirements_bak.txt
+
+
+
+# 忽略所有 .log 文件
+*.log
+
+# 忽略 .git 目录
+.git
+
+# 忽略所有 .pyc 文件
+*.pyc
+
+# 忽略 __pycache__ 目录
+__pycache__
+
+# 忽略 .DS_Store 文件（在 macOS 上）
+.DS_Store
+
+# 忽略 README 文件
+README_CN.md
