@@ -7,6 +7,7 @@ import { AUDIO_MODERATION, VIDEO_MODERATION } from './config';
 import { BackendCdkStack } from './backend_cdk_stack';
 import { NagSuppressions } from 'cdk-nag';
 import * as uuid from 'uuid';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 export function createS3(stack: BackendCdkStack): void {
 
@@ -21,10 +22,19 @@ export function createS3(stack: BackendCdkStack): void {
     serverAccessLogsPrefix: 'access-logs/'
   });
 
+  // 添加 Bedrock 访问权限
+  bucket.addToResourcePolicy(new iam.PolicyStatement({
+    effect: iam.Effect.ALLOW,
+    principals: [new iam.ServicePrincipal('bedrock.amazonaws.com')],
+    actions: ['s3:GetObject'],
+    resources: [`${bucket.bucketArn}/*`]
+  }));
+  
   stack.s3BucketName =bucket_name;
   stack.s3Arn = `arn:aws:s3:::${bucket_name}`;
   stack.s3Bucket = bucket;
 
+  
 
   new CfnOutput(stack, 'S3BucketName', {
     value: bucket.bucketName,

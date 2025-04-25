@@ -23,13 +23,6 @@
   - Amazon Bedrock  
   - Amazon Rekognition  
 
-  A. 当音频/视频文件上传到 S3 后，S3 触发 Lambda 函数。  
-
-  B. Lambda 函数创建 ECS 任务。  
-
-  C. Lambda 函数将审核任务信息存入 SQS。  
-
-  ECS 任务从 SQS 获取消息并执行审核。  
 
 ![audio_video_moderation.png](resources/audio_video_moderation.png)  
 
@@ -40,15 +33,6 @@
   - Amazon Bedrock  
   - Amazon Rekognition  
 
-  A. 通过 API Gateway 提交审核请求。  
-
-  B. **Lambda_A** 创建 ECS 任务。  
-
-  C. **Lambda_A** 将审核任务信息存入 **SQS_A**。  
-
-  D. ECS 任务从 **SQS_A** 获取消息，执行审核，并将结果存入 **SQS_B**。  
-
-  **SQS_B** 触发 **Lambda_B**，并将审核结果推送至目标服务器。  
 
 ![live_moderation.png](resources/live_moderation.png)  
 

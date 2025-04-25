@@ -107,12 +107,6 @@ video为将视频切分为短视频通过llm进行审核。
 
 
 
-- 图像审核的方式（可选）
-
-```
-"image_moderation_plugin": "可选值为bedrock或rekognition"
-
-```
 
 - 文本审核模型（可选）
 
@@ -121,15 +115,23 @@ video为将视频切分为短视频通过llm进行审核。
 
 ```
 
-- 图片/短视频审核模型（可选） ❗  ❗  ❗ 
+- 图片审核模型（可选） ❗  ❗  ❗ 
+
+```
+"img_model_id":"us.amazon.nova-lite-v1:0"
+
+如果需要rekognition 审核，此次可配置为rekognition
+
+```
+
+
+- 短视频审核模型（可选） ❗  ❗  ❗ 
 
 *如果图像审核的方式选择了bedrock,请进行配置
 ```
-"img_model_id":"us.amazon.nova-lite-v1:0",
-
-#如果审核短视频推荐 us.amazon.nova-pro-v1:0
-#如果审核图片推荐 us.amazon.nova-lite-v1:0
+"video_model_id":"us.amazon.nova-pro-v1:0"
 ```
+
   
 - VPC CIDR（可选）
 
@@ -163,11 +165,11 @@ video为将视频切分为短视频通过llm进行审核。
 - 文件可读有效期（可选）❗❗❗
 
 ```
-"file_expiration_time": "604800",
+"file_expiration_time": "3600",
 ```
 
 所有上传到S3指定目录中的文件，均配置了加密后的临时访问连接。 您可配置访问链接可读的有效时间(秒)。
-最大值为604800秒(7天)
+最大值为3600秒(6小时)
 
 ## 4. 上传镜像，配置推送（可选）
 
@@ -185,7 +187,7 @@ video为将视频切分为短视频通过llm进行审核。
 请将content_modetaion/backend/Dockerfile文件中的首行修改为
 
 ```
-From public.ecr.aws/x9b0z9r8/ffmpeg6_python311_boto3:v01
+FROM public.ecr.aws/x9b0z9r8/ffmpeg6_python311_boto3:v01
 ```
 
 ### 4.1.2 手动构建基础镜像

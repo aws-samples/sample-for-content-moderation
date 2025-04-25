@@ -14,7 +14,7 @@ const regionName = app.node.tryGetContext("region_name");
 
 // Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }))
 
-new BackendCdkStack(app, `Modetaion-${accountId.slice(0, 8)}-002`, {
+new BackendCdkStack(app, `Moderaion-${accountId.slice(0, 8)}-031`, {
     env: { account: accountId, region: regionName },
 });
 

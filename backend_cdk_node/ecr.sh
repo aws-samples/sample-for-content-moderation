@@ -3,7 +3,7 @@
 # Check if all required arguments are provided
 if [ "$#" -ne 4 ]; then
     echo "Usage: $0 <aws-account-id> <region> <repository-name> <dockerfile-path>"
-    echo "Example: bash ecr.sh xxxxxxxx us-west-2 moderation_repository ../backend/"
+    echo "Example: bash ecr.sh xxxxxxx us-west-2 moderation_repository_aws ../backend/"
 
     exit 1
 fi
@@ -13,10 +13,6 @@ ACCOUNT_ID="$1"
 REGION="$2"
 REPO_NAME="$3"
 DOCKERFILE_PATH="$4"
-
-
-# Install dependencies required by some libraries
-# pip install -r ../backend/lambda/lambda_callback/requirements.txt --target ../backend/lambda/lambda_callback/lib
 
 
 # Create ECR repository

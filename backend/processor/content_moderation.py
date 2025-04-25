@@ -3,198 +3,157 @@ import json
 import os
 import traceback
 import sys
-from dependency_injector.wiring import inject, Provide
-from base.plugin_config import AppContainer
-from tools.log_config import get_logger
+
+from tools import sqs_client
+from tools.log_config import get_logger, setup_logging
+from tools.metadata_tool import load_metadata, save_metadata
 
 logger = get_logger(__name__)
-from processor.save_info_alert import save_and_push_message
 from tools.as3_tool import batch_upload
-from config import MODERATION_BUCKET_NAME, FACE_RESOURCE_PATH, S3BUCKET_CUSTOMER_DIR, \
-    S3_FILE_READABLE_EXPIRATION_TIME, VISUAL_MODERATION_TYPE, TEXT_DEFAULT_PROMPT_EN
-from tools.ffmpeg_tool import is_black_audio, is_black_image
-from tools.time_tool import process_time_from_audio_name, process_time_from_img_name
-from tools.s3_client import S3Client
+from config import MODERATION_BUCKET_NAME, S3BUCKET_CUSTOMER_DIR, IMAGE_MODERATION_SQS, AUDIO_MODERATION_SQS, \
+    VIDEO_MODERATION_SQS
+from tools.time_tool import process_time_from_video_audio_name, process_time_from_img_name
+
+setup_logging()
+
+sqs_url = "https://sqs.us-west-2.amazonaws.com/779846792662/Modetaion-77984679-011-ModerationSQSCallbackDLQ66B955DE-ikVShpSelSnQ"
 
 
 def image_moderation(image_path_arr, task_id):
+    print("----------1111")
     logger.info("image_check")
     logger.info(image_path_arr)
 
-    results = check_images(image_path_arr)
+    metadata_obj = load_metadata(task_id)
 
-    if results is None or len(results) == 0:
-        logger.info("The image has no issues")
-    else:
-        try:
-            # The image has issues, storing it to S3
-            files_to_upload = []
+    if isinstance(metadata_obj, dict) and len(metadata_obj) == 0:
+        logger.info("[Error] metadata_obj is empty!")
+        return
 
-            s3_clients = S3Client(MODERATION_BUCKET_NAME)
+    s3_file_arr = []
+    try:
+        # The image has issues, storing it to S3
+        files_to_upload = []
 
-            for img in results:
-                img_name = os.path.basename(img['path'])
+        for img in image_path_arr:
+            img_name = os.path.basename(img)
 
-                s3_path = f"{S3BUCKET_CUSTOMER_DIR}/{task_id}/img/{img_name}"
+            s3_path = f"{S3BUCKET_CUSTOMER_DIR}/{task_id}/img/{img_name}"
 
-                files_to_upload.append((img['path'], s3_path))
-                img['time'] = int(process_time_from_img_name(img_name))
+            files_to_upload.append((img, s3_path))
 
-                img['s3_read_path'] = s3_clients.get_presigned_url(MODERATION_BUCKET_NAME, s3_path,
-                                                                   S3_FILE_READABLE_EXPIRATION_TIME)
-                img['s3_path'] = s3_path
+            s3_file_obj = {}
 
-            asyncio.run(batch_upload(MODERATION_BUCKET_NAME, files_to_upload))
+            if metadata_obj.get('visual_moderation_type','image') == "image":
+                s3_file_obj['time_info'] = process_time_from_img_name(img_name,metadata_obj.get("image_interval_seconds"))
+            else:
+                start_time_str, end_time_str = process_time_from_video_audio_name(img_name,metadata_obj.get("video_interval_seconds"))
+                s3_file_obj['time_info']=[start_time_str,end_time_str]
 
-            for img in results:
-                save_and_push_message(task_id, img['s3_path'], img["s3_read_path"], "", img['time'], img['time'],
-                                      img['confidence'] if 'confidence' in img else "", img['tag'], ",".join(img['tag']), "video" if VISUAL_MODERATION_TYPE == "video" else "image",
-                                      1)
+            s3_file_obj['path'] = s3_path
 
+            s3_file_arr.append(s3_file_obj)
 
+        asyncio.run(batch_upload(MODERATION_BUCKET_NAME, files_to_upload))
 
+    except Exception as e:
+        logger.info(e)
+        traceback.print_exc(file=sys.stdout)
 
-        except Exception as e:
-            logger.info(e)
-            traceback.logger.info_exc(file=sys.stdout)
+    sqs = sqs_client.init()
+
+    sqs_client.insert(sqs, IMAGE_MODERATION_SQS if metadata_obj.get('visual_moderation_type',
+                                                                    '') == "image" else VIDEO_MODERATION_SQS,
+                      json.dumps({
+                          "task_id": task_id,
+                          "user_id": metadata_obj.get('user_id', ''),
+                          "media_url": metadata_obj.get('media_url', ''),
+                          "visual_moderation_type": metadata_obj.get('visual_moderation_type', ''),
+                          "model_id": metadata_obj.get('img_model_id', '') if metadata_obj.get('visual_moderation_type',
+                                                                    '') == "image" else metadata_obj.get('video_model_id', '') ,
+                          "save_flag": metadata_obj.get('save_flag', ''),
+                          "s3_files": s3_file_arr
+                      }))
 
     for img_path in image_path_arr:
         os.remove(img_path)
 
-
-@inject
-def audio_moderation(audio_file, task_id, speech_recognizer=Provide[AppContainer.speech_recognizer],
-                     text_moderation=Provide[AppContainer.text_moderation]
-                     ):
-    if is_black_audio(audio_file) is False:
-
-        # asr
-        content = speech_recognizer.recognize(audio_file)
-
-        logger.info(f"asr: {content}")
-
-        trimmed_text = content.strip()
-
-        if trimmed_text:
-
-            bedrock_result = text_moderation.moderate(TEXT_DEFAULT_PROMPT_EN, content)
-
-            logger.info("bedrock :")
-            logger.info(bedrock_result)
-
-            if bedrock_result is None:
-                logger.info("bedrock: Audio analysis failed")
-                return
-
-            if isinstance(bedrock_result, str):
-                bedrock_result_obj = json.loads(bedrock_result)
-            else:
-                bedrock_result_obj = bedrock_result
-
-            # State 1 indicates an error, and state 2 indicates normal
-            s3_clients = S3Client(MODERATION_BUCKET_NAME)
-
-            s3_path = ""
-            s3_read_path = ""
-
-            logger.info( len(bedrock_result_obj['result']))
-
-            state = 2
-
-            confidence = []
-            tag = []
-            des = []
-
-            if len(bedrock_result_obj['result']) > 0:
-                state = 1
-
-                for r in bedrock_result_obj['result']:
-
-                    if 'tag' in r and r['tag'] != "" and r['tag'] != "None":
-                        tag.append(r['tag'])
-                        if 'confidence' in r:
-                            confidence.append(r['confidence'])
-                        if 'des' in r:
-                            confidence.append(r['des'])
-
-                # save to s3
-                files_to_upload = []
-                # 存储到S3
-                logger.error("SAVE AUDIO TO S3")
-                audio_name = os.path.basename(audio_file)
-
-                s3_path = f"{S3BUCKET_CUSTOMER_DIR}/{task_id}/audio/{audio_name}"
-
-                files_to_upload.append((audio_file, s3_path))
-                asyncio.run(batch_upload(MODERATION_BUCKET_NAME, files_to_upload))
-
-                s3_read_path = s3_clients.get_presigned_url(MODERATION_BUCKET_NAME, s3_path,
-                                                            S3_FILE_READABLE_EXPIRATION_TIME)
-
-            start_time_str, end_time_str = process_time_from_audio_name(audio_file)
-            save_and_push_message(task_id, s3_path, s3_read_path, trimmed_text, start_time_str, end_time_str, confidence,tag,
-                                  des,
-                                  "audio", state)
+    print("img success")
 
 
-    else:
-        logger.info("Blank audio")
+def audio_moderation(audio_file, task_id):
+    print("-audio_moderation---")
+    metadata_obj = load_metadata(task_id)
+
+    if isinstance(metadata_obj, dict) and len(metadata_obj) == 0:
+        logger.info("[Error] metadata_obj is empty!")
+        return
+
+    # save to s3
+    files_to_upload = []
+    # 存储到S3
+    logger.error("SAVE AUDIO TO S3")
+    audio_name = os.path.basename(audio_file)
+
+    s3_path = f"{S3BUCKET_CUSTOMER_DIR}/{task_id}/audio/{audio_name}"
+
+    files_to_upload.append((audio_file, s3_path))
+    asyncio.run(batch_upload(MODERATION_BUCKET_NAME, files_to_upload))
+
+    #
+    start_time_str, end_time_str = process_time_from_video_audio_name(audio_file,metadata_obj.get("audio_interval_seconds"))
+
+    sqs = sqs_client.init()
+
+    sqs_client.insert(sqs, AUDIO_MODERATION_SQS, json.dumps({
+        "task_id": task_id,
+        "user_id": metadata_obj.get('user_id', ''),
+        "media_url": metadata_obj.get('media_url', ''),
+        "visual_moderation_type": metadata_obj.get('visual_moderation_type', ''),
+        "model_id": metadata_obj.get('text_model_id', ''),
+        "save_flag": metadata_obj.get('save_flag', ''),
+        "s3_files": [
+            {
+                "path": s3_path,
+                "time_info": [start_time_str, end_time_str]
+            }
+        ]
+    }))
+
+    print("audio success")
 
     os.remove(audio_file)
+
     logger.info(f"Delete audio {audio_file}")
 
 
-@inject
-def check_images(image_arr, img_moderation=Provide[AppContainer.image_moderation]):
-    '''
-    :param img_moderation:
-    :param image_arr:
-    :param image_moderation:
-    :return: False indicates that an issue was detected."
-    '''
+if __name__ == '__main__':
+    # metadata_obj = {
+    #     'user_id':"lee",
+    #     'task_id':"aaa",
+    #     # 'media_url':"media_url",
+    #     'text_model_id':"model_id",
+    #     'img_model_id':"model_id",
+    #     'save_flag':"1",
+    #     'visual_moderation_type':"image",
+    # }
+    #
+    # logger.info("process_sqs_info")
+    # logger.info(metadata_obj)
+    #
+    # save_metadata("aaa",metadata_obj)
 
-    '''
-    [
-            {
-                "img_index": 1,
-                "tag": ["Ban"],
-                "confidence": "High",
-                "state": 1
-            },
-            {
-                "img_index": 2,
-                "tag": ["Behavior2"],
-                "confidence": "High", 
-                "state": 1
-            },
-            {
-                "img_index": 3,
-                "tag": [],
-                "confidence": "None",
-                "state": 2
-            }
-    ]
-    '''
-
-    if VISUAL_MODERATION_TYPE == "video":
-        # only suppots llm - nova
-        results_arr = []
-        for video in image_arr:
-
-            if not os.path.exists(video):
-                logger.error(f"The video file does not exist: {video}")
-                continue
-
-            moderation_result = img_moderation.moderate_video(video)
-            if moderation_result:
-
-                for moderation_result in moderation_result:
-                    if len(moderation_result['tag']) > 0:
-                        results_arr.append(moderation_result)
-        return results_arr
-    else:
-        return img_moderation.moderate_images(image_arr)
+    audio_moderation("0000_1744810192_000070.flac","aaa")
 
 
 
 
+    # print(image_moderation([
+    #     "0000_1744818871_000006.jpg","0000_1744818871_000008.jpg"
+    # ], "aaa"))
+
+
+
+    # print(image_moderation([
+    #     "0000_1744810192_000069.mp4"
+    # ], "aaa"))

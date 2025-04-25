@@ -3,7 +3,7 @@ import { Duration } from 'aws-cdk-lib';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as iam from 'aws-cdk-lib/aws-iam'; 
 
-import { AUDIO_MODERATION, VIDEO_MODERATION } from './config';
+import { AUDIO_MODERATION, LIVE_MODERATION, VIDEO_MODERATION } from './config';
 import { BackendCdkStack } from './backend_cdk_stack';
 
 function createSecureQueue(stack: cdk.Stack, id: string, props?: sqs.QueueProps): sqs.Queue {
@@ -79,4 +79,62 @@ export function createSqs(stack: BackendCdkStack): void {
   stack.callbackQueue = callbackQueue;
   stack.callbackQueueUrl = callbackQueue.queueUrl;
   stack.callbackQueueArn  = callbackQueue.queueArn;
+
+
+
+
+
+
+  if ([LIVE_MODERATION].some(v => stack.deployType.includes(v as number))) {
+    // Create content moderation SQS queue  inter
+    const moderationImgQueueDlq = createSecureQueue(stack, 'Moderation-SQS-Moderation-IMG-DLQ', {
+      visibilityTimeout: Duration.hours(12),
+    });
+
+    const moderationImgQueue = createSecureQueue(stack, 'Moderation-SQS-Moderation-IMG', {
+      visibilityTimeout: Duration.hours(12),
+      deadLetterQueue: {
+        maxReceiveCount: 3,
+        queue: moderationImgQueueDlq,
+      },
+    });
+
+    stack.moderationImgQueue = moderationImgQueue;
+    stack.moderationImgQueueUrl = moderationImgQueue.queueUrl;
+    stack.moderationImgQueueArn = moderationImgQueue.queueArn;
+
+
+    const moderationVideoQueueDlq = createSecureQueue(stack, 'Moderation-SQS-Moderation-Video-DLQ', {
+      visibilityTimeout: Duration.hours(12),
+    });
+
+    const moderationVideoQueue = createSecureQueue(stack, 'Moderation-SQS-Moderation-Video', {
+      visibilityTimeout: Duration.hours(12),
+      deadLetterQueue: {
+        maxReceiveCount: 3,
+        queue: moderationVideoQueueDlq,
+      },
+    });
+    stack.moderationVideoQueue = moderationVideoQueue;
+    stack.moderationVideoQueueUrl = moderationVideoQueue.queueUrl;
+    stack.moderationVideoQueueArn = moderationVideoQueue.queueArn;
+
+
+    const moderationAudioQueueDlq = createSecureQueue(stack, 'Moderation-SQS-Moderation-Audio-DLQ', {
+      visibilityTimeout: Duration.hours(12),
+    });
+
+    const moderationAudioQueue = createSecureQueue(stack, 'Moderation-SQS-Moderation-Audio', {
+      visibilityTimeout: Duration.hours(12),
+      deadLetterQueue: {
+        maxReceiveCount: 3,
+        queue: moderationAudioQueueDlq,
+      },
+    });
+
+    stack.moderationAudioQueue = moderationAudioQueue;
+    stack.moderationAudioQueueUrl = moderationAudioQueue.queueUrl;
+    stack.moderationAudioQueueArn = moderationAudioQueue.queueArn;
+
+  }
 }

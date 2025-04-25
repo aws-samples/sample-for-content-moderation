@@ -1,13 +1,5 @@
-import json
+import traceback
 
-from dependency_injector import providers
-
-from base.plugin_config import AppContainer
-from config import SPEECH_RECOGNIZER_PLUGIN, IMAGE_MODERATION_PLUGIN, TEXT_MODERATION_PLUGIN
-from plugin.bedrock_image_moderation import BedrockImageModeration
-from plugin.bedrock_text_moderation import BedrockTextModeration
-from plugin.rekogition_image_moderation import RekognitionImageModeration
-from plugin.sagemaker_asr import SagemakerASR
 from tools.log_config import setup_logging, get_logger
 
 setup_logging()
@@ -54,8 +46,11 @@ def listen_media_task(process_queue):
         process_queue.put("【listen_media_task】 is completed")
 
     except Exception as e:
+        traceback.print_exc(file=sys.stdout)
         logger.error(f"【L2】 listen_media_task encountered an error : {e}")
         process_queue.put(f"【listen_media_task】 encountered an error")
+
+
     finally:
         sys.exit(0)
 
@@ -68,8 +63,6 @@ def scan_file_and_moderation(process_queue):
     '''
 
     try:
-        init_plugin()
-
 
         #process_flag
         #0 Not executed  首次执行
@@ -112,30 +105,6 @@ def scan_file_and_moderation(process_queue):
 
 
 
-def init_plugin():
-    # 1. 创建容器实例
-    container = AppContainer()
-
-    # 2. 从配置文件加载配置
-    # with open("plugin_config.json") as f:
-    #     config_data = json.load(f)
-    # container.config.from_dict(config_data)
-
-    # 3. 根据配置初始化具体实现
-    if SPEECH_RECOGNIZER_PLUGIN == "sagemaker":
-        container.speech_recognizer.override(providers.Factory(SagemakerASR))
-
-    if TEXT_MODERATION_PLUGIN == "bedrock":
-        container.text_moderation.override(providers.Factory(BedrockTextModeration))
-
-    if IMAGE_MODERATION_PLUGIN == "rekognition":
-        container.image_moderation.override(providers.Factory(RekognitionImageModeration))
-    elif IMAGE_MODERATION_PLUGIN == "bedrock":
-        container.image_moderation.override(providers.Factory(BedrockImageModeration))
-
-
-    container.wire(packages=["processor.content_moderation"])
-
 
 if __name__ == "__main__":
 
@@ -166,3 +135,5 @@ if __name__ == "__main__":
     finally:
         logger.info("【L1】【Content moderation completed 】")
         sys.exit(0)
+
+

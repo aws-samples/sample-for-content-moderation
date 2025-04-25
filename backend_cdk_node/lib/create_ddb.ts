@@ -29,11 +29,11 @@ export function createDDB(stack: BackendCdkStack) {
       removalPolicy: RemovalPolicy.DESTROY
     });
 
-    taskDetailTable.addGlobalSecondaryIndex({
-      indexName: 'TaskIdQueryIndex',
-      partitionKey: { name: 'task_id_query', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'timestamp', type: dynamodb.AttributeType.NUMBER }
-    });
+    // taskDetailTable.addGlobalSecondaryIndex({
+    //   indexName: 'TaskIdQueryIndex',
+    //   partitionKey: { name: 'task_id_query', type: dynamodb.AttributeType.STRING },
+    //   sortKey: { name: 'timestamp', type: dynamodb.AttributeType.NUMBER }
+    // });
   }
 
   userInfoTable = new dynamodb.Table(stack, 'Moderation-UserInfoTable', {

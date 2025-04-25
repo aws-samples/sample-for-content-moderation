@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 import ffmpeg
 import requests
 from tools import ffmpeg_tool
-from config import ROOT_RESOURCE_PATH, VISUAL_MODERATION_TYPE
+from config import ROOT_RESOURCE_PATH
 from tools.log_config import get_logger,setup_logging
 from tools.s3_client import S3Client
 
@@ -57,7 +57,7 @@ def is_live_stream(media_url):
 
 
 
-def process_video(task_id, media_url, start_connect_max_retries=60, end_connect_max_retries=15, retry_delay=1,
+def process_video(task_id, media_url, visual_modetaion_type,start_connect_max_retries=60, end_connect_max_retries=15, retry_delay=1,
                   audio_segment_duration=10, snapshot_interval=1):
     '''
     Video processing - Extract audio and images from video
@@ -99,7 +99,7 @@ def process_video(task_id, media_url, start_connect_max_retries=60, end_connect_
     while retries < max_retries:
         logger.info(f"【{connect_flag}】:Reconnecting")
 
-        result_state = split_video(task_id, media_url, dir_start_number, audio_segment_duration, snapshot_interval,
+        result_state = split_video(task_id, media_url, visual_modetaion_type,dir_start_number, audio_segment_duration, snapshot_interval,
                                    first_time)
 
         if result_state:
@@ -143,7 +143,7 @@ def get_file_type(filename):
     return None
 
 
-def split_video(task_id, media_url, dir_start_time, audio_segment_duration=10, snapshot_interval=1, first_time=0):
+def split_video(task_id, media_url, visual_modetaion_type,dir_start_time, audio_segment_duration=10, snapshot_interval=1, first_time=0):
     '''
     Trim a segment from the video.
     :param rtmp_url:
@@ -185,7 +185,7 @@ def split_video(task_id, media_url, dir_start_time, audio_segment_duration=10, s
 
     audio_output_pattern = os.path.join(str(audio_dir), f'{dir_start_time:04d}_{first_time}_%06d.wav')
 
-    if VISUAL_MODERATION_TYPE =="video":
+    if visual_modetaion_type =="video":
         image_output_pattern = os.path.join(str(img_dir), f'{dir_start_time:04d}_{first_time}_%06d.mp4')
     else:
         image_output_pattern = os.path.join(str(img_dir), f'{dir_start_time:04d}_{first_time}_%06d.jpg')
@@ -203,7 +203,7 @@ def split_video(task_id, media_url, dir_start_time, audio_segment_duration=10, s
 
         audio_output = ffmpeg_tool.output_audio(stream, audio_output_pattern, audio_segment_duration)
 
-        if VISUAL_MODERATION_TYPE == "video":
+        if visual_modetaion_type == "video":
             image_output = ffmpeg_tool.output_silent_video(stream, image_output_pattern, snapshot_interval)
         else:
             image_output = ffmpeg_tool.output_img(stream, image_output_pattern, snapshot_interval)

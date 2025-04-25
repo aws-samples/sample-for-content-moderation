@@ -3,7 +3,6 @@ import * as sagemaker from 'aws-cdk-lib/aws-sagemaker';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as appscaling from 'aws-cdk-lib/aws-applicationautoscaling';
 import { CfnOutput } from 'aws-cdk-lib';
-import * as uuid from 'uuid';
 import { BackendCdkStack } from './backend_cdk_stack';
 import { NagSuppressions } from 'cdk-nag';
 
@@ -11,9 +10,9 @@ export function createSagemaker(stack: BackendCdkStack): void {
 
 
   // SageMaker permissions
-  const modelName = `Moderation-Whisper-Model-${uuid.v4().slice(0, 8)}`;
-  const endpointConfigName = `Moderation-Whisper-EndpointConfig-${uuid.v4().slice(0, 8)}`;
-  const endpointName = `content-moderation-endpoint-whisper-v3-${uuid.v4().slice(0, 8)}`;
+  const modelName = `Whisper-${stack.stackName}`;
+  const endpointConfigName = `EndpointConfigName-${stack.stackName}`;
+  const endpointName = `EndpointName-${stack.stackName}`;
 
 
   

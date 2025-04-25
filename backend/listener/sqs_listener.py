@@ -9,8 +9,7 @@ class SQSListener:
         self.queue_url = MODERATION_SQS_URL
 
     def listen(self):
-        logger.info("Listening for SQS messages...v04...")
-
+        logger.info("Listening for SQS messages...v05...")
 
         '''
         program_type  程序类型 0:持续处理SQS消息   1:仅处理1条SQS  2:持续处理SQS消息，直到监听x次消息队列后后没有消息响应
@@ -24,7 +23,6 @@ class SQSListener:
         temp_attempt_count=ATTEMPT_COUNT
 
         while True:
-
             response = self.sqs.receive_message(
                 QueueUrl=self.queue_url,
                 MaxNumberOfMessages=1,

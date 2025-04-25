@@ -3,10 +3,12 @@ import threading
 import time
 import traceback
 import sys
-from config import ROOT_RESOURCE_PATH, BATCH_PROCESS_IMG_NUMBER, VISUAL_MODERATION_TYPE
+from config import ROOT_RESOURCE_PATH, BATCH_PROCESS_IMG_NUMBER
 from processor.content_moderation import audio_moderation,image_moderation
 import os
 from tools.log_config import get_logger
+from tools.metadata_tool import load_metadata
+
 logger = get_logger(__name__)
 
 '''
@@ -124,7 +126,7 @@ def scan_directory(root_dir,task_type):
         if len(media_folders) > 0:
 
             for task_id in media_folders:
-
+                metadata_obj=load_metadata(task_id)
                 if task_type =='audio':
                     media_folder_audio_path = os.path.join(root_dir, task_id, "audio")
                     if not os.path.exists(media_folder_audio_path):
@@ -132,7 +134,7 @@ def scan_directory(root_dir,task_type):
                     audio_slice_arr = os.listdir(media_folder_audio_path)
 
                     # Traverse audio files and add them to the queue.
-                    move_file(audio_slice_arr, root_dir, processing_dir, media_folder_audio_path, task_id, "audio")
+                    move_file(audio_slice_arr, root_dir, processing_dir, media_folder_audio_path, task_id, "audio",None)
 
                 elif task_type =='image':
 
@@ -142,7 +144,7 @@ def scan_directory(root_dir,task_type):
                     img_slice_arr = os.listdir(media_folder_img_path)
 
                     # Traverse images files and add them to the queue.
-                    move_file(img_slice_arr, root_dir, processing_dir, media_folder_img_path, task_id, "image")
+                    move_file(img_slice_arr, root_dir, processing_dir, media_folder_img_path, task_id, "image",metadata_obj.get("visual_moderation_type","image"))
 
 
         time.sleep(2) # nosemgrep
@@ -168,7 +170,8 @@ def is_file_recently_modified(filepath, threshold=3):
     return (current_time - file_mtime) <= threshold
 
 
-def move_file(slice_arr, root_dir, processing_dir, media_folder_path, task_id, type_flag):
+
+def move_file(slice_arr, root_dir, processing_dir, media_folder_path, task_id, type_flag,visual_moderation_type):
     '''
     将未处理的文件 移动到 处理中
     Move the unprocessed files to the 'Processing' folder
@@ -181,14 +184,13 @@ def move_file(slice_arr, root_dir, processing_dir, media_folder_path, task_id, t
     :return:
     '''
     temp_img_arr = []
-
     # 遍历媒体文件  Traverse media files.
     for slice_name in slice_arr:
+
         file_path = os.path.join(media_folder_path, slice_name)
 
         if is_file_recently_modified(file_path,3):
             logger.info(f"Writing in progress, not moving {file_path} yet.")
-
             continue
 
         logger.info(f"Processing {file_path}")
@@ -204,6 +206,8 @@ def move_file(slice_arr, root_dir, processing_dir, media_folder_path, task_id, t
         old_file_size = os.path.getsize(file_path)
         if old_file_size == 0:
             logger.info(f"old_file_size, not moving yet: {old_file_size}")
+            logger.info(f"remove zero file : {file_path}")
+            os.remove(file_path)
             continue
 
         os.replace(file_path,new_path)
@@ -226,7 +230,7 @@ def move_file(slice_arr, root_dir, processing_dir, media_folder_path, task_id, t
     if type_flag == "image":
         if temp_img_arr:
 
-            if VISUAL_MODERATION_TYPE =="video":
+            if visual_moderation_type =="video":
                 chunk_size= 1
             else:
                 # Split into groups of x

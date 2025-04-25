@@ -19,12 +19,25 @@ export class BackendCdkStack extends cdk.Stack {
     r_tags: any [];
     tagsJsonStr:string;
 
+    moderationImgQueue:any;
+    moderationImgQueueUrl:string;
+    moderationImgQueueArn:string;
+
+    moderationVideoQueue:any;
+    moderationVideoQueueUrl:string;
+    moderationVideoQueueArn:string;
+
+    moderationAudioQueue:any;
+    moderationAudioQueueUrl:string;
+    moderationAudioQueueArn:string;
+
     callbackQueueUrl:string;
     callbackQueueArn:string;
     s3ModerationQueueUrl:string;
     s3ModerationQueueArn:string;
     moderationQueueUrl:string;
     moderationQueueArn:string;
+
     s3Arn:string;
     s3Bucket:any;
     s3BucketName:string;
@@ -51,11 +64,14 @@ export class BackendCdkStack extends cdk.Stack {
     lambdaTextModeration:any;
     lambdaImgModeration:any;
 
+    lambdaImgVideoInner:any;
+    lambdaAudioInner:any;
+
     taskRole:any;
     taskExecutionRole:any;
     clusterName:string;
     taskDefinitionArn:string;
-    privateSubnets:any [];
+    subnets:any [];
     containerName:string;
     securityGroup:string;
     securityGroupId:string;
@@ -81,6 +97,7 @@ export class BackendCdkStack extends cdk.Stack {
 
         if ([VIDEO_MODERATION, AUDIO_MODERATION, LIVE_MODERATION].some(v => this.deployType.includes(v as number))) {
             createSagemaker(this);
+            // createEventbridge(this)
             createEcs(this);
         }
 

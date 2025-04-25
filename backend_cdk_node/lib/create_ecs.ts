@@ -10,7 +10,6 @@ import {
   Tags
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import * as uuid from 'uuid';
 import { BackendCdkStack } from './backend_cdk_stack';
 import { NagSuppressions } from 'cdk-nag';
 
@@ -18,27 +17,22 @@ export function createEcs(stack: BackendCdkStack) {
   const vpc = new ec2.Vpc(stack, "Moderation-VPC", {
     ipAddresses: ec2.IpAddresses.cidr(stack.node.tryGetContext('vpcCidr') || "10.111.0.0/16"),
     maxAzs: 2,
-    natGateways: 1,
+    natGateways: 0,
     subnetConfiguration: [
       {
         name: "Public",
         subnetType: ec2.SubnetType.PUBLIC,
-        cidrMask: 20
-      },
-      {
-        name: "Private",
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
         cidrMask: 20
       }
     ]
   });
 
 
-
   // 创建一个 CloudWatch 日志组，用于存储 VPC 流日志
   const logGroupVPC = new logs.LogGroup(stack, "VPCFlowLogGroup", {
-    logGroupName: `/aws/vpc/flow-logs-${stack.stackName}-${uuid.v4().slice(0, 8)}`, // 使用 stackName 确保唯一性
+    logGroupName: `/aws/vpc/flow-logs-${stack.stackName}`, // 使用 stackName 确保唯一性
     retention: logs.RetentionDays.ONE_WEEK, // 根据需求设置日志保留期限
+    removalPolicy: RemovalPolicy.DESTROY
   });
 
   const customCloudWatchLogsPolicy = new iam.Policy(stack, 'CustomCloudWatchLogsPolicy', {
@@ -82,37 +76,32 @@ export function createEcs(stack: BackendCdkStack) {
     service: ec2.InterfaceVpcEndpointAwsService.ECR
   });
 
-  const privateSubnets = vpc.privateSubnets;
+  vpc.addInterfaceEndpoint("CloudWatchLogsEndpoint", {
+    service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS
+  });
+
+  const subnets = vpc.publicSubnets;
 
   const securityGroup = new ec2.SecurityGroup(stack, "Moderation-ECS-SecurityGroup", {
     vpc,
     description: "Security group for Moderation ECS tasks",
     allowAllOutbound: false
   });
-
-  securityGroup.addEgressRule(
-    ec2.Peer.anyIpv4(),
-    ec2.Port.tcp(443),
-    'Allow HTTPS outbound traffic'
-  );
-
-  securityGroup.addEgressRule(
-    ec2.Peer.anyIpv4(),
-    ec2.Port.tcp(80),
-    'Allow HTTP outbound traffic'
-  );
-
-  securityGroup.addEgressRule(
-    ec2.Peer.anyIpv4(),
-    ec2.Port.udp(53),
-    'Allow DNS (UDP) outbound traffic'
-  );
-  securityGroup.addEgressRule(
-    ec2.Peer.anyIpv4(),
-    ec2.Port.tcp(53),
-    'Allow DNS (TCP) outbound traffic'
-  );
-
+  
+  // Web
+  securityGroup.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), 'Allow HTTPS');
+  securityGroup.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'Allow HTTP');
+  
+  // DNS
+  securityGroup.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.udp(53), 'Allow DNS (UDP)');
+  securityGroup.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(53), 'Allow DNS (TCP)');
+  
+  // RTMP
+  securityGroup.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(1935), 'Allow RTMP');
+  
+  // UDP Live Stream
+  securityGroup.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.udpRange(10000, 20000), 'Allow UDP Live Stream Range');
+  
 
 
   const cluster = new ecs.Cluster(stack, "Moderation-ECS-Cluster", {
@@ -128,7 +117,7 @@ export function createEcs(stack: BackendCdkStack) {
 
 
   const logGroupz = new logs.LogGroup(stack, "MyECSLogGroup", {
-    logGroupName: `/aws/ecs/ecs-log-group-${stack.stackName}-${uuid.v4().slice(0, 8)}`, // 使用 stackName 确保唯一性
+    logGroupName: `/aws/ecs/ecs-log-group-${stack.stackName}`, // 使用 stackName 确保唯一性
     retention: logs.RetentionDays.ONE_WEEK
   });
 
@@ -169,7 +158,9 @@ export function createEcs(stack: BackendCdkStack) {
       "sqs:GetQueueAttributes",
       "sqs:SendMessage"
     ],
-    resources: [stack.moderationQueueArn, stack.callbackQueueArn, stack.s3ModerationQueueArn].filter(Boolean)
+    resources: [
+      stack.moderationQueueArn, stack.callbackQueueArn, stack.s3ModerationQueueArn,stack.moderationImgQueueArn, stack.moderationVideoQueueArn, stack.moderationAudioQueueArn
+    ].filter(Boolean)
   }));
 
   
@@ -293,23 +284,23 @@ export function createEcs(stack: BackendCdkStack) {
     }),
     environment: {
       REGION_NAME: stack.region,
-      PROGRAM_TYPE: "0",
+      PROGRAM_TYPE: "2",
       ATTEMPT_COUNT: "3",
+
+      IMAGE_MODERATION_SQS: stack.moderationImgQueueUrl,
+      AUDIO_MODERATION_SQS: stack.moderationAudioQueueUrl,
+      VIDEO_MODERATION_SQS: stack.moderationVideoQueueUrl,
+
       MODERATION_SQS: stack.moderationQueueUrl,
+
       CALLBACK_SQS: stack.callbackQueueUrl,
-      S3_FILE_READABLE_EXPIRATION_TIME: stack.node.tryGetContext("file_expiration_time"),
+
       TASK_TABLE_NAME: stack.taskTable.tableName,
-      TASK_DETAIL_TABLE_NAME: stack.taskDetailTable.tableName,
       MODERATION_BUCKET_NAME: stack.s3BucketName,
+
       S3BUCKET_CUSTOMER_DIR: "moderation_results",
-      WHISPER_ENDPOINT_NAME: stack.sagemakerEndpointName,
-      SPEECH_RECOGNIZER_PLUGIN :'sagemaker',
-      TEXT_MODERATION_PLUGIN:'bedrock',
-      VISUAL_MODERATION_TYPE :  stack.node.tryGetContext("visual_moderation_type"),
-      IMAGE_MODERATION_PLUGIN :  stack.node.tryGetContext("image_moderation_plugin"),
-      MODEL_ID:stack.node.tryGetContext("text_model_id"),
-      IMG_MODEL_ID: stack.node.tryGetContext("img_model_id"),
-      BATCH_PROCESS_IMG_NUMBER: "3",
+
+
       TAGS: stack.tagsJsonStr
     }
   });
@@ -320,6 +311,7 @@ export function createEcs(stack: BackendCdkStack) {
   const service = new ecs.FargateService(stack, "Moderation-Service", {
     cluster,
     securityGroups: [securityGroup],
+    assignPublicIp:true,
     taskDefinition,
     desiredCount: 1,
     minHealthyPercent: 50,
@@ -344,6 +336,6 @@ export function createEcs(stack: BackendCdkStack) {
   stack.taskDefinitionArn = taskDefinition.taskDefinitionArn
   stack.containerName = container.containerName
   stack.securityGroupId = securityGroup.securityGroupId
-  stack.privateSubnets = privateSubnets
+  stack.subnets = subnets
 
 }

@@ -94,11 +94,6 @@ Modify the `cdk.json` configuration file:
 
 The possible values are `image` and `video`. If `image` is selected, the video is split into images for moderation. If `video` is selected, the video is cut into short videos and then moderated by LLM.
 
-- Image Moderation Plugin (Optional)
-
-```
-"image_moderation_plugin": "Possible values are bedrock or rekognition"
-```
 
 - Text Moderation Model (Optional)
 
@@ -106,16 +101,24 @@ The possible values are `image` and `video`. If `image` is selected, the video i
 "text_model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
 ```
 
-- Image/Short Video Moderation Model (Optional) ❗ ❗ ❗
-
-*If you selected `bedrock` for image moderation, configure it here:*
+- Image Moderation Model (Optional) ❗ ❗ ❗  
 
 ```
 "img_model_id": "us.amazon.nova-lite-v1:0"
 ```
 
-- If moderating short videos, use `us.amazon.nova-pro-v1:0`.
-- If moderating images, use `us.amazon.nova-lite-v1:0`.
+If rekognition audit is required, this can be configured as rekognition
+
+
+- Short Video Moderation Model (Optional) ❗ ❗ ❗  
+
+*If the video moderation method is set to Bedrock, please configure it as follows:  
+```
+"video_model_id": "us.amazon.nova-pro-v1:0"
+```
+
+
+
 
 - VPC CIDR (Optional)
 
@@ -150,10 +153,10 @@ If you need results pushed to a specific server, configure the URL and implement
 - File Read Expiration Time (Optional) ❗ ❗ ❗
 
 ```
-"file_expiration_time": "604800"
+"file_expiration_time": "3600"
 ```
 
-All files uploaded to the specified S3 directory are configured with encrypted temporary access links. You can configure how long the link will be valid (in seconds). The maximum value is 604800 seconds (7 days).
+All files uploaded to the specified S3 directory are configured with encrypted temporary access links. You can configure how long the link will be valid (in seconds). The maximum value is 3600 seconds (6 hours).
 
 ## 4. Upload Images, Configure Push (Optional)
 

@@ -44,11 +44,6 @@ def output_img(stream, image_output_pattern, segment_duration=1):
 
 
 
-def is_black_audio(input_file):
-    #Temporarily return non-empty
-    # TODO
-    return False
-
 
 
 def is_black_image(image_path):
