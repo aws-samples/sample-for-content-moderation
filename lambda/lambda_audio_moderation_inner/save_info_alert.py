@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import time
 from log_config import get_logger
@@ -33,7 +34,13 @@ def save_and_push_message(task_id,user_id, s3_path,s3_read_path, original_conten
 
     result['task_id']=task_id
     result['user_id']=user_id
-    result['timestamp'] = int(time.time() * 1000)
+
+    timestamp=int(time.time())
+    result['timestamp'] = timestamp*1000
+
+    dt = datetime.fromtimestamp(timestamp)
+    result['create_time'] = dt.strftime("%Y-%m-%d %H:%M:%S")
+
     dynamodb_client.save(task_detail_table, result)
 
         # push_message(result)

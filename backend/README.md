@@ -36,9 +36,11 @@ curl --location 'https://xxxxxx/api/query_moderation' \
 
 **Request Body**
 
-| Parameter | Type   | Required | Description     | Example                        |
-|-----------|--------|----------|-----------------|--------------------------------|
-| url       | String | Yes      | Video URL       | https://xxxxxxxxx.m3u8         |
+| Parameter | Type   | Required | Description          | Example                        |
+|-----------|--------|----------|----------------------|--------------------------------|
+| url       | String | Yes      | Video URL            | https://xxxxxxxxx.m3u8         |
+| start_time | Long   | 否    | Start time timestamp | 1745665852000          |
+| end_time   | Long   | 否    | End time timestamp   | 1745695859000          |
 
 ---
 

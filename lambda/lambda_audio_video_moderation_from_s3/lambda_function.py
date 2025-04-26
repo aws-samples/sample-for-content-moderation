@@ -6,7 +6,8 @@ import sqs_client
 from sha_tool import get_unique_value
 from datetime import datetime
 from ecs_tool import create_ecs_task
-from config import S3_MODERATION_SQS, TASK_TABLE_NAME, USER_ID
+from config import S3_MODERATION_SQS, TASK_TABLE_NAME, USER_ID, TEXT_MODEL_ID, IMG_MODEL_ID, VIDEO_MODEL_ID, \
+    VISUAL_MODERATION_TYPE
 
 
 def response(message, result_info, statusCode):
@@ -89,12 +90,26 @@ def lambda_handler(event, context):
 
     sqs = sqs_client.init()
 
-    sqs_client.insert(sqs, S3_MODERATION_SQS, json.dumps({
-        "user_id": USER_ID,
-        "url": url,
+
+
+    sqs_message = {
         "task_id": task_id,
-        "moderation_type": 1,
-    }))
+        "media_url": url,
+        "user_id": USER_ID,
+        "video_interval_seconds": "10",
+        "image_interval_seconds": "1",
+        "audio_interval_seconds": "10",
+        'text_model_id': TEXT_MODEL_ID,
+        'img_model_id': IMG_MODEL_ID,
+        'video_model_id': VIDEO_MODEL_ID,
+        'save_flag': "1",
+        'visual_moderation_type': VISUAL_MODERATION_TYPE
+    }
+
+    sqs_client.insert(sqs, S3_MODERATION_SQS, json.dumps(sqs_message))
+
+
+
 
     print("Creation successful")
 

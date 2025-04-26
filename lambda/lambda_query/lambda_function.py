@@ -21,21 +21,23 @@ def lambda_handler(event, context):
 
     body_data = json.loads(body_str)
 
-    url = body_data.get('url')
     user_id = header_obj.get('user_id')
+
+    url = body_data.get('url')
+    start_time = body_data.get('start_time')
+    end_time = body_data.get('end_time')
 
     ddb = init()
 
-
     task_id = f"{user_id}_{get_unique_value(url)}"
-
+    print(f"task_id {task_id}")
     table = ddb.Table(TASK_DETAIL_TABLE_NAME)
     try:
-        response_ddb = query_by_pk(table, "task_id", task_id)
+        response_ddb = query_by_pk(table, "task_id", task_id, "timestamp", start_time, end_time)
         # response_ddb = query_by_gsi(table, TASK_ID_QUERY_INDEX, TASK_ID_QUERY_INDEX_KEY_NAME,task_id)
     except Exception as e:
         print(e)
-        response_ddb=[]
+        response_ddb = []
 
     print(response_ddb)
     result_arr = []
@@ -50,7 +52,8 @@ def lambda_handler(event, context):
                 "confidence": r['confidence'],
                 # "time_info": [convert_decimal(i) for i in r['time_info']],
                 "task_state": int(r['state']),
-                "timestamp": int(r['timestamp'])
+                "timestamp": int(r['timestamp']),
+                "create_time": r['create_time']
             }
             )
 
@@ -74,11 +77,14 @@ def response(message, result_info, statusCode):
 
 
 if __name__ == '__main__':
-
-
+    a = {
+        "url": "https://d14tamu6in7iln.cloudfront.net/sex/sex_e2.mp4",
+        # "start_time" :1745641275943,
+        # "end_time" :1745641273424,
+    }
     event = {
-        "headers": {"user_id":"lee"},
-        "body": "{\"url\": \"https://d14tamu6in7iln.cloudfront.net/sex/sex_e2.mp4\"}"
+        "headers": {"user_id": "InternalTask"},
+        "body": json.dumps(a)
     }
 
     print(lambda_handler(event, None))

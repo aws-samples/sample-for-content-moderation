@@ -35,10 +35,11 @@ curl --location 'https://xxxxxx/api/query_moderation' \
 
 请求体
 
-| 参数名 | 类型     | 是否必填 | 描述    | 示例值                    |
-|-----|--------|------|-------|------------------------|
-| url | String | 是    | 视频URL | https://xxxxxxxxx.m3u8 |
-
+| 参数名        | 类型     | 是否必填 | 描述      | 示例值                    |
+|------------|--------|------|---------|------------------------|
+| url        | String | 是    | 视频URL   | https://xxxxxxxxx.m3u8 |
+| start_time | Long   | 否    | 起始时间时间戳 | 1745665852000          |
+| end_time   | Long   | 否    | 停止时间时间戳 | 1745695859000          |
 
 
 ### 1.2 提交音频/视频/直播审核任务
@@ -88,7 +89,6 @@ curl --location 'https://xxxxxx.execute-api.us-west-2.amazonaws.com/api/submit_m
 | video_model_id         | String | 是    | 视频审核模型id                                                                | us.amazon.nova-pro-v1:0                   |
 | save_flag              | Int    | 是    | 文件保存标识。1是保持全部文件，0为仅保存违规内容。                                              | 1                                         |
 
-
 ### 1.3 文本审核
 
 `curl` 测试链接：
@@ -121,7 +121,6 @@ curl --location 'https://xxxxxx/api/text_moderation' \
 | user_id | String | 是    | 用户在 AWS 的唯一标识 |
 | token   | String | 是    | 用户在 AWS 的密钥   |
 
-
 请求体
 
 | 参数名      | 类型     | 是否必填 | 描述                            | 示例值            |
@@ -130,9 +129,7 @@ curl --location 'https://xxxxxx/api/text_moderation' \
 | prompt   | String | 否    | 用于引导模型分析的提示词                  | 请判断是否违规内容      |
 | model_id | String | 否    | 模型 ID，支持 nova/claude，需提供具体 ID | claude-3-haiku |
 
-
-
-  见：[AWS Bedrock 模型支持](https://docs.aws.amazon.com/zh_cn/bedrock/latest/userguide/models-supported.html)
+见：[AWS Bedrock 模型支持](https://docs.aws.amazon.com/zh_cn/bedrock/latest/userguide/models-supported.html)
 
 ```
 us.amazon.nova-lite-v1:0
@@ -171,14 +168,14 @@ curl --location 'https:/xxxxxx/api/img_moderation' \
 
 请求体
 
-| 参数名     | 类型   | 是否必填 | 描述                                                         | 示例值          |
-|------------|--------|----------|--------------------------------------------------------------|-----------------|
-| type       | Int    | 是       | 1 为使用 Rekognition 审核，2 为使用 Bedrock 进行审核         | 1               |
-| img_base64 | String | 是       | 图片的 base64 值                                              | （base64字符串） |
-| prompt     | String | 否       | 选填提示词，用于引导模型分析                                 |                 |
-| model_id   | String | 否       | 模型 ID，支持 nova/claude，需提供具体 ID                     | nova-lite-v1:0  |
+| 参数名        | 类型     | 是否必填 | 描述                                      | 示例值            |
+|------------|--------|------|-----------------------------------------|----------------|
+| type       | Int    | 是    | 1 为使用 Rekognition 审核，2 为使用 Bedrock 进行审核 | 1              |
+| img_base64 | String | 是    | 图片的 base64 值                            | （base64字符串）    |
+| prompt     | String | 否    | 选填提示词，用于引导模型分析                          |                |
+| model_id   | String | 否    | 模型 ID，支持 nova/claude，需提供具体 ID           | nova-lite-v1:0 |
 
-  见：[AWS Bedrock 模型支持](https://docs.aws.amazon.com/zh_cn/bedrock/latest/userguide/models-supported.html)
+见：[AWS Bedrock 模型支持](https://docs.aws.amazon.com/zh_cn/bedrock/latest/userguide/models-supported.html)
 
 ```
 us.amazon.nova-lite-v1:0

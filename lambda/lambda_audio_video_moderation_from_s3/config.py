@@ -15,11 +15,11 @@ ATTEMPT_COUNT = os.environ.get('ATTEMPT_COUNT', "2")
 
 USER_TABLE_NAME = os.environ.get('USER_TABLE_NAME', 'ModerationUser')
 
-TASK_TABLE_NAME = os.environ.get('TASK_TABLE_NAME', 'task_moderation')
+TASK_TABLE_NAME = os.environ.get('TASK_TABLE_NAME', 'Modetaion-77984679-016-ModerationTaskTableFADE4D13-15FBUUQMU9U5A')
 
 TASK_DETAIL_TABLE_NAME = os.environ.get('TASK_DETAIL_TABLE_NAME', 'task_detail_moderation')
 
-REGION_NAME = os.environ.get('REGION_NAME', 'us-east-1')
+REGION_NAME = os.environ.get('REGION_NAME', 'us-west-2')
 
 CLUSTER_NAME = os.environ.get('CLUSTER_NAME', 'vm_cluster')
 
@@ -31,30 +31,34 @@ SECURITY_GROUP_ID = os.environ.get('SECURITY_GROUP_ID','NONE')
 
 CONTAINER_NAME = os.environ.get('CONTAINER_NAME', 'cm3')
 
-MODERATION_SQS= os.environ.get('MODERATION_SQS', 'https://sqs.us-east-1.amazonaws.com/account_id/live_moderation')
+
+S3BUCKET_CUSTOMER_DIR = os.environ.get('S3BUCKET_CUSTOMER_DIR', 'customer_video')
+
+
+
+MODERATION_SQS= os.environ.get('MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/779846792662/Modetaion-77984679-016-ModerationSQSModerationC44008E0-kGDTzlbylbrB')
+
+IMAGE_MODERATION_SQS= os.environ.get('IMAGE_MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/779846792662/Modetaion-77984679-016-ModerationSQSModerationIMG633EF1C3-JEeNTRCWHOtJ')
+AUDIO_MODERATION_SQS= os.environ.get('AUDIO_MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/779846792662/Modetaion-77984679-016-ModerationSQSModerationAudioCEEDCCD9-r1DNdJ5y9SqV')
+VIDEO_MODERATION_SQS= os.environ.get('VIDEO_MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/779846792662/Modetaion-77984679-016-ModerationSQSModerationVideoFB43E340-mwpd3iYiIKC9')
 
 
 MODERATION_BUCKET_NAME = os.environ.get('MODERATION_BUCKET_NAME', 'video-moderation-a')
 
-S3BUCKET_CUSTOMER_DIR = os.environ.get('S3BUCKET_CUSTOMER_DIR', 'customer_video')
 
-WHISPER_ENDPOINT_NAME =  os.environ.get('WHISPER_ENDPOINT_NAME', 'content-moderation-endpoint-whisper')
+CALLBACK_SQS_URL=os.environ.get('CALLBACK_SQS', 'https://sqs.us-east-1.amazonaws.com/account_id/video_moderation_alert')
 
-CALLBACK_SQS_URL=os.environ.get('CALLBACK_SQS', 'https://sqs.us-east-1.amazonaws.com/account_id/moderation_alert')
-
-SPEECH_RECOGNIZER_PLUGIN = os.environ.get('SPEECH_RECOGNIZER_PLUGIN', 'sagemaker')
-TEXT_MODERATION_PLUGIN = os.environ.get('TEXT_MODERATION_PLUGIN', 'bedrock')
-IMAGE_MODERATION_PLUGIN = os.environ.get('IMAGE_MODERATION_PLUGIN', 'bedrock')
 VISUAL_MODERATION_TYPE = os.environ.get('VISUAL_MODERATION_TYPE', "video")
-
 
 TEXT_MODEL_ID = os.environ.get('TEXT_MODEL_ID', 'anthropic.claude-3-sonnet-20240229-v1:0')
 IMG_MODEL_ID = os.environ.get('IMG_MODEL_ID', "us.amazon.nova-lite-v1:0")
 VIDEO_MODEL_ID = os.environ.get('VIDEO_MODEL_ID', "us.amazon.nova-pro-v1:0")
 
-BATCH_PROCESS_IMG_NUMBER = os.environ.get('BATCH_PROCESS_IMG_NUMBER', "3")
 
 TAGS = os.environ.get('TAGS', 'NONE')
+
+
+
 
 
 

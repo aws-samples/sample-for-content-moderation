@@ -39,11 +39,11 @@ S3BUCKET_CUSTOMER_DIR = os.environ.get('S3BUCKET_CUSTOMER_DIR', 'customer_video'
 
 
 
-MODERATION_SQS= os.environ.get('MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/779846792662/Modetaion-77984679-016-ModerationSQSModerationC44008E0-kGDTzlbylbrB')
+MODERATION_SQS= os.environ.get('MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/xxxx/Modetaion-77984679-016-ModerationSQSModerationC44008E0-kGDTzlbylbrB')
 
-IMAGE_MODERATION_SQS= os.environ.get('IMAGE_MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/779846792662/Modetaion-77984679-016-ModerationSQSModerationIMG633EF1C3-JEeNTRCWHOtJ')
-AUDIO_MODERATION_SQS= os.environ.get('AUDIO_MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/779846792662/Modetaion-77984679-016-ModerationSQSModerationAudioCEEDCCD9-r1DNdJ5y9SqV')
-VIDEO_MODERATION_SQS= os.environ.get('VIDEO_MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/779846792662/Modetaion-77984679-016-ModerationSQSModerationVideoFB43E340-mwpd3iYiIKC9')
+IMAGE_MODERATION_SQS= os.environ.get('IMAGE_MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/xxxx/Modetaion-77984679-016-ModerationSQSModerationIMG633EF1C3-JEeNTRCWHOtJ')
+AUDIO_MODERATION_SQS= os.environ.get('AUDIO_MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/xxxx/Modetaion-77984679-016-ModerationSQSModerationAudioCEEDCCD9-r1DNdJ5y9SqV')
+VIDEO_MODERATION_SQS= os.environ.get('VIDEO_MODERATION_SQS', 'https://sqs.us-west-2.amazonaws.com/xxxx/Modetaion-77984679-016-ModerationSQSModerationVideoFB43E340-mwpd3iYiIKC9')
 
 
 MODERATION_BUCKET_NAME = os.environ.get('MODERATION_BUCKET_NAME', 'video-moderation-a')
