@@ -20,7 +20,7 @@ sqs_url = "https://sqs.us-west-2.amazonaws.com/779846792662/Modetaion-77984679-0
 
 
 def image_moderation(image_path_arr, task_id):
-    print("----------1111")
+    print(f"image_moderation----------{image_path_arr}")
     logger.info("image_check")
     logger.info(image_path_arr)
 

@@ -193,9 +193,9 @@ def move_file(slice_arr, root_dir, processing_dir, media_folder_path, task_id, t
             logger.info(f"Writing in progress, not moving {file_path} yet.")
             continue
 
-        logger.info(f"Processing {file_path}")
 
         new_path = file_path.replace(root_dir, processing_dir)
+        logger.info(f"准备 Processing Move: [{file_path}] to [{new_path}]")
 
         dst_dir = os.path.dirname(new_path)
 
@@ -204,16 +204,23 @@ def move_file(slice_arr, root_dir, processing_dir, media_folder_path, task_id, t
 
 
         old_file_size = os.path.getsize(file_path)
+
+        file_age = time.time() - os.path.getmtime(file_path)
+
         if old_file_size == 0:
             logger.info(f"old_file_size, not moving yet: {old_file_size}")
-            logger.info(f"remove zero file : {file_path}")
-            os.remove(file_path)
+
+            if file_age > 10:  # 空文件且10秒以上未修改
+                logger.info(f"remove zero file : {file_path}")
+                os.remove(file_path)
+            else:
+                print(f"wait {file_path}  目前 file_age ：{file_age}")
             continue
 
         os.replace(file_path,new_path)
 
         new_file_size = os.path.getsize(new_path)
-        logger.info(f"new_file_size: {new_file_size}")
+        logger.info(f"{file_path} new_file_size: [{new_file_size} ] type_flag: [{type_flag}]")
 
 
         if type_flag == 'audio':
@@ -237,7 +244,10 @@ def move_file(slice_arr, root_dir, processing_dir, media_folder_path, task_id, t
                 chunk_size = BATCH_PROCESS_IMG_NUMBER
             new_arr = [temp_img_arr[i:i + chunk_size] for i in range(0, len(temp_img_arr), chunk_size)]
 
+            print(f"new arr {len(new_arr)}")
             for arr in new_arr:
+
+                print(f" add img queue {arr}")
                 img_process_task_fifo_queue.put({
                     "task_id": task_id,
                     "file_paths": arr,

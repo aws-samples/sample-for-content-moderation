@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/python:3.10-slim
+FROM public.ecr.aws/x9b0z9r8/ffmpeg6_python311_boto3:v01
 
 LABEL authors="author"
 

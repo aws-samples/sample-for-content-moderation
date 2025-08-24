@@ -432,19 +432,25 @@ def get_image_type_from_base64(base64_string):
 
 
 if __name__ == '__main__':
-    model_id = "anthropic.claude-3-sonnet-20240229-v1:0"
+    # model_id = "anthropic.claude-3-sonnet-20240229-v1:0"
     # response = invoke_claude(model_id, IMG_CLAUDE_SYSTEM_PROMPT, IMG_PROMPT_0325_CN, "/Users/tedli/workspace/defaultWorkSpace/content_moderation/backend/lambda/lambda_img_moderation/db1.jpg")
-    response = batch_invoke_claude(model_id, IMG_CLAUDE_SYSTEM_PROMPT, IMG_PROMPT_0325_CN, [
-        "/Users/tedli/workspace/defaultWorkSpace/content_moderation/backend/lambda/lambda_img_moderation/db1.jpg",
-        "/Users/tedli/workspace/defaultWorkSpace/content_moderation/backend/lambda/lambda_img_moderation/db2.png",
-        "/Users/tedli/workspace/defaultWorkSpace/content_moderation/backend/lambda/lambda_img_moderation/db3.png"])
+    # response = batch_invoke_claude(model_id, IMG_CLAUDE_SYSTEM_PROMPT, IMG_PROMPT_0325_CN, [
+        # "/Users/tedli/workspace/defaultWorkSpace/content_moderation/backend/lambda/lambda_img_moderation/db1.jpg",
+        # "/Users/tedli/workspace/defaultWorkSpace/content_moderation/backend/lambda/lambda_img_moderation/db2.png",
+        # "/Users/tedli/workspace/defaultWorkSpace/content_moderation/lambda/lambda_img_moderation_inner/test_resource/img.png"])
 
-    # model_id = "us.amazon.nova-lite-v1:0"
+    model_id = "us.amazon.nova-pro-v1:0"
     # response = invoke_nova(model_id, IMG_NOVA_SYSTEM_PROMPT_1_EN, IMG_PROMPT_0325_CN, "/Users/tedli/workspace/defaultWorkSpace/content_moderation/backend/lambda/lambda_img_moderation/db2.png")
 
-    # response=batch_invoke_nova(model_id,IMG_NOVA_SYSTEM_PROMPT_1_EN,IMG_PROMPT_0325_CN, ["/Users/tedli/workspace/defaultWorkSpace/content_moderation/backend/lambda/lambda_img_moderation/db2.png","/Users/tedli/workspace/defaultWorkSpace/content_moderation/backend/lambda/lambda_img_moderation/db3.png"])
+    response=batch_invoke_nova(model_id,IMG_NOVA_SYSTEM_PROMPT_1_EN,IMG_PROMPT_0325_CN,
+                               [
+                                   # "/Users/tedli/workspace/defaultWorkSpace/content_moderation/backend/lambda/lambda_img_moderation/db2.png",
+                                "/Users/tedli/workspace/defaultWorkSpace/content_moderation/lambda/lambda_img_moderation_inner/test_resource/img.png"])
 
     print(response)
+
+
+
 
     # model_id_info = "us.amazon.nova-pro-v1:0"
     # model_id_info = "us.amazon.nova-pro-v1:0"

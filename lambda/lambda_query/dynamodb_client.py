@@ -20,7 +20,9 @@ def query_by_pk(table, key_name, key_value, timestamp_name=None, start_time=None
         key_condition = key_condition & Key(timestamp_name).lte(end_time)
 
     response = table.query(
-        KeyConditionExpression=key_condition
+        KeyConditionExpression=key_condition,
+        ScanIndexForward=False,
+        Limit = 20  # 限制返回条数
     )
     return response['Items']
 

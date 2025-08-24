@@ -47,7 +47,7 @@ def lambda_handler(event, context):
                 "type": r['type'],
                 "tag": r['tag'],
                 "files": r['read_files'],
-                # "original_content": r['original_content'],
+                "original_content": r['original_content'],
                 # "message": r['message'],
                 "confidence": r['confidence'],
                 # "time_info": [convert_decimal(i) for i in r['time_info']],

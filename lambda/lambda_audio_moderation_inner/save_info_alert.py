@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 import json
 import time
@@ -35,11 +36,22 @@ def save_and_push_message(task_id,user_id, s3_path,s3_read_path, original_conten
     result['task_id']=task_id
     result['user_id']=user_id
 
-    timestamp=int(time.time())
-    result['timestamp'] = timestamp*1000
 
-    dt = datetime.fromtimestamp(timestamp)
+    # 毫秒级时间戳
+    timestamp_ms = int(time.time() * 1000)
+
+    # 可读时间（精确到秒）
+    dt = datetime.fromtimestamp(timestamp_ms / 1000)
     result['create_time'] = dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    # 避免重复的后缀（0~999）
+    random_suffix = random.randint(0, 999)
+
+    # 拼接成最终唯一时间戳（16位：毫秒*1000 + 随机数）
+    result['timestamp'] = timestamp_ms * 1000 + random_suffix
+
+
+
 
     dynamodb_client.save(task_detail_table, result)
 
