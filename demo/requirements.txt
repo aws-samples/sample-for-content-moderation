@@ -1,0 +1,6 @@
+opencv-python==4.10.0.84
+gradio
+pillow
+boto3
+moviepy
+Flask-Babel>=4.0.0
